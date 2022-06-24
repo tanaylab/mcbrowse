@@ -1,7 +1,7 @@
 """
 The top-level ``mcbrowse`` module re-exports everything all the sub-modules, so, for example, you can write ``from
 mcbrowse import GeneGeneData`` or ``mcbrowse.GeneGeneData`` instead of the full name
-``mcbrowse.gene_gene.GeneGeneData``.
+``mcbrowse.figures.gene_gene.GeneGeneData``.
 """
 
 # See https://github.com/jwilk/python-syntax-errors
