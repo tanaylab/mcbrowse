@@ -191,6 +191,10 @@ class TidyFigureData(FigureData):
 class FigureFilter(ABC, Generic[AnyDataT]):  # pylint: disable=too-few-public-methods
     """
     Control how to extract the figure data from the ``daf`` repository.
+
+    .. todo::
+
+        Have each `.FigureFilter` expose a ``plotly`` widget that configures it.
     """
 
     @abstractmethod
@@ -203,6 +207,10 @@ class FigureFilter(ABC, Generic[AnyDataT]):  # pylint: disable=too-few-public-me
 class FigureVeneer(ABC, Generic[AnyDataT]):  # pylint: disable=too-few-public-methods
     """
     Contain the parameters controlling the figure's appearance.
+
+    .. todo::
+
+        Have each `.FigureVeneer` expose a ``plotly`` widget that configures it.
     """
 
     @abstractmethod
