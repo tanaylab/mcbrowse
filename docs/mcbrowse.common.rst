@@ -7,6 +7,7 @@ mcbrowse.common
 
 .. toctree::
 
+    mcbrowse.common.data
     mcbrowse.common.filters
     mcbrowse.common.reorders
     mcbrowse.common.veneers

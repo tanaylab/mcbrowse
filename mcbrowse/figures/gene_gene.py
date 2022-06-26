@@ -6,11 +6,8 @@ exist, gradients between different states, and how all these match the current t
 """
 
 from dataclasses import dataclass
-from typing import Callable
 from typing import NewType
 from typing import Optional
-from typing import Sequence
-from typing import Tuple
 from typing import Union
 
 import pandas as pd  # type: ignore
@@ -21,7 +18,9 @@ from ..common import ContinuousAxisVeneer
 from ..common import ContinuousColorScale
 from ..common import DiscreteAxisVeneer
 from ..common import PointsVeneer
+from ..common import TooltipsData
 from ..common import TooltipsVeneer
+from ..common import tooltips
 from .interface import FigureFilter
 from .interface import FigureVeneer
 from .interface import TidyFigureData
@@ -59,50 +58,16 @@ class GeneGeneFilter(FigureFilter[GeneGeneData]):
     #: Converting the values to colors is done in the `.GeneGeneVeneer`.
     metacell_value: str = "type"
 
-    #: The value to place in the tooltip for each metacell.
-    #:
-    #: This is stored in a column called ``metacell_tooltip`` in the collected data frame. If ``None``, the metacell
-    #: names are used as tooltips. If this is a string, it is the name of some additional 1D data associated with each
-    #: metacell. If it is a sequence of strings, then lists the names of multiple such data (each will be shown in its
-    #: own line), and optionally give a nicer name to each one. If this is a function, it should take the ``daf`` data
-    #: as input and return a sequence of strings, one per metacell.
-    metacell_tooltip: Union[
-        None, str, Sequence[Union[str, Tuple[str, str]]], Callable[[DafReader], Sequence[str]]
-    ] = None
+    #: How to compute a tooltip for each metacell.
+    metacell_tooltip: TooltipsData = None
 
     def collect(self, data: DafReader) -> GeneGeneData:
-        x_gene_index = data.axis_index("gene", self.x_gene_name)
-        y_gene_index = data.axis_index("gene", self.y_gene_name)
-
-        gene_metacell_fractions = data.get_matrix("gene,metacell;fraction")
-        x_gene_fractions = gene_metacell_fractions[x_gene_index, :]
-        y_gene_fractions = gene_metacell_fractions[y_gene_index, :]
+        x_gene_fractions = data.get_vector(f"metacell,gene={self.x_gene_name};fraction")
+        y_gene_fractions = data.get_vector(f"metacell,gene={self.y_gene_name};fraction")
 
         metacell_names = data.axis_entries("metacell")
         metacell_values = data.get_vector("metacell;" + self.metacell_value)
-        metacell_tooltips: Sequence[str]
-        if self.metacell_tooltip is None:
-            metacell_tooltips = metacell_names  # type: ignore
-        elif callable(self.metacell_tooltip):
-            metacell_tooltips = self.metacell_tooltip(data)
-        else:
-            properties: Sequence[Union[str, Tuple[str, str]]]
-            if isinstance(self.metacell_tooltip, str):
-                properties = [self.metacell_tooltip]
-            else:
-                properties = self.metacell_tooltip
-
-            metacell_tooltips = metacell_names  # type: ignore
-            for property_data in properties:
-                if isinstance(property_data, str):
-                    property_title = property_data
-                    property_name = property_data
-                else:
-                    property_name, property_title = property_data
-                metacell_tooltips = [
-                    f"{tooltip}\n{property_title}: {value}"
-                    for tooltip, value in zip(metacell_tooltips, data.get_vector("metacell;" + property_name))
-                ]
+        metacell_tooltips = tooltips(data, "metacell", self.metacell_tooltip)
 
         return GeneGeneData(
             pd.DataFrame(
